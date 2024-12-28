@@ -1,4 +1,7 @@
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -18,17 +21,52 @@ class Hotel{
         this.weekendRateRegular = weekendRateRegular;
         this.weekendRateRewards = weekendRateRewards;
     }
+
+    public int getRate(String customerType, Date date){
+        int dayOfWeek = date.getDay();
+        if (dayOfWeek >= 1 && dayOfWeek <=5){
+            return customerType.equals("Regular") ? weekendRateRegular : weekdayRateRewards;
+        }else {
+            return customerType.equals("Regular") ? weekendRateRegular : weekendRateRewards;
+        }
+    }
 }
-class HotelReservation{
+class HotelReservation {
     List<Hotel> hotels;
 
-    public HotelReservation(){
+    public HotelReservation() {
         hotels = new ArrayList<>();
+        hotels.add(new Hotel("Lakewood", 3, 110, 80, 90, 80));
+        hotels.add(new Hotel("Bridgewood", 4, 160, 110, 60, 50));
+        hotels.add(new Hotel("Ridgewood", 5, 220, 100, 150, 40));
     }
 
-    public void addHotel(String name, int rating, int weekdayRateRegular, int weekdayRateReward, int weekendRateRegular, int weekendRateReward){
-        Hotel newHotel = new Hotel(name, rating, weekdayRateRegular, weekdayRateReward, weekendRateRegular, weekendRateReward);
-        hotels.add(newHotel);
+    public String findCheapestHotel(String customerType, List<Date> dates) {
+        String cheapestHotel = null;
+        int cheapestCost = Integer.MAX_VALUE;
+
+        for (Hotel hotel : hotels) {
+            int totalCost = 0;
+            for (Date date : dates) {
+                totalCost += hotel.getRate(customerType, date);
+            }
+
+            if (totalCost < cheapestCost || (totalCost == cheapestCost && (cheapestHotel == null || hotel.rating > getHotelRating(cheapestHotel)))){
+                cheapestHotel = hotel.name;
+                cheapestCost = totalCost;
+            }
+        }
+
+        return cheapestHotel + ", Total Rates: $" + cheapestCost;
+    }
+
+    private int getHotelRating(String hotelName) {
+        for (Hotel hotel : hotels) {
+            if (hotel.name.equals(hotelName)) {
+                return hotel.rating;
+            }
+        }
+        return 0;
     }
 }
 public class HotelReservationSystem {
@@ -37,24 +75,25 @@ public class HotelReservationSystem {
         Scanner sc = new Scanner(System.in);
         HotelReservation reservationSystem = new HotelReservation();
 
-        System.out.println("Do you want to add a new hotel? (yes/no)");
-        String addHotelResponse = sc.nextLine();
-        if (addHotelResponse.equalsIgnoreCase("yes")){
-            System.out.println("Enter hotel name: ");
-            String name = sc.nextLine();
-            System.out.println("Enter hotel rating: ");
-            int rating = Integer.parseInt(sc.nextLine());
-            System.out.println("Enter weekday rate for regular customer: ");
-            int weekdayRateRegular = Integer.parseInt(sc.nextLine());
-            System.out.println("Enter weekday rate for reward customer: ");
-            int weekdayRateReward = Integer.parseInt(sc.nextLine());
-            System.out.println("Enter weekend rate for regular customer: ");
-            int weekendRateRegular = Integer.parseInt(sc.nextLine());
-            System.out.println("Enter weekend rate for reward customer: ");
-            int weekendRateReward = Integer.parseInt(sc.nextLine());
+        System.out.println("Enter the date range (e.g., 10Sep2020, 11Sep2020): ");
+        String inputDates = sc.nextLine();
+        String[] dateStrings = inputDates.split(", ");
+        List<Date> dates = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy");
 
-            reservationSystem.addHotel(name, rating, weekdayRateRegular, weekdayRateReward, weekendRateRegular, weekendRateReward);
-            System.out.println("Hotel added successfully");
+        try{
+            for (String dateString : dateStrings) {
+                dates.add(sdf.parse(dateString.trim()));
+            }
+        }catch (ParseException e){
+            System.out.println("Invalid date Format. Please use ddMMyyyy format.");
+            return;
         }
+
+        System.out.println("Enter customer type (Regular/Rewards): ");
+        String customerType = sc.nextLine().trim();
+
+        String result = reservationSystem.findCheapestHotel(customerType, dates);
+        System.out.println(result);
     }
 }
