@@ -74,9 +74,10 @@ class HotelReservation {
         }
     }
 
-    public String findCheapestHotelBestRatedHotel(String customerType, List<Date> dates) {
+    public String findBestRatedHotel(String customerType, List<Date> dates) {
         Hotel bestHotel = null;
-        int cheapestCost = Integer.MAX_VALUE;
+        int highestRating = Integer.MIN_VALUE;
+        int lowestCost = Integer.MAX_VALUE;
 
         for (Hotel hotel : hotels) {
             int totalCost = 0;
@@ -84,13 +85,14 @@ class HotelReservation {
                 totalCost += hotel.getRate(customerType, date);
             }
 
-            if (totalCost < cheapestCost || (totalCost == cheapestCost && (bestHotel == null || hotel.rating > bestHotel.rating))) {
+            if (hotel.rating > highestRating || (hotel.rating == highestRating && totalCost < lowestCost)) {
                 bestHotel = hotel;
-                cheapestCost = totalCost;
+                highestRating = hotel.rating;
+                lowestCost = totalCost;
             }
         }
 
-        return bestHotel != null ? bestHotel.name + ", Rating: " + bestHotel.rating + ", Total Rates: $" + cheapestCost : "No hotels found";
+        return bestHotel != null ? bestHotel.name + ", Total Rates: $" + lowestCost : "No hotels found";
         }
 
     private int getHotelRating(String hotelName) {
@@ -125,7 +127,7 @@ public class HotelReservationSystem {
             e.printStackTrace();
         }
 
-        String bestRatedHotel = reservationSystem.findCheapestHotelBestRatedHotel("Regular", dates);
+        String bestRatedHotel = reservationSystem.findBestRatedHotel("Regular", dates);
         System.out.println(bestRatedHotel);
     }
 }
