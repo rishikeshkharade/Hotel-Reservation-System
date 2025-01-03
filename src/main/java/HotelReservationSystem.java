@@ -32,6 +32,10 @@ class Hotel {
         this.weekendRateRewards = weekendRateRewards;
     }
 
+    public void setRating(int rating){
+        this.rating = rating;
+    }
+
    public int getRate(String customerType, Date date){
         int dayOfWeek = date.getDay();
         if (dayOfWeek >= 1 && dayOfWeek <=5){
@@ -63,6 +67,16 @@ class HotelReservation {
             }
         }
     }
+
+    public void setHotelRating(String hotelName, int rating){
+        for (Hotel hotel : hotels) {
+            if (hotel.name.equals(hotelName)){
+                hotel.setRating(rating);
+                break;
+            }
+        }
+    }
+
     public String findCheapestHotel(String customerType, List<Date> dates) {
         List<String> cheapestHotels = new ArrayList<>();
         int cheapestCost = Integer.MAX_VALUE;
@@ -109,6 +123,9 @@ public class HotelReservationSystem {
         reservationSystem.setHotelRates("Bridgewood", 150, 100, 50, 60);
         reservationSystem.setHotelRates("Ridgewood", 220, 100, 150, 40);
 
+        reservationSystem.setHotelRating("Lakewood", 3);
+        reservationSystem.setHotelRating("Bridgewood", 4);
+        reservationSystem.setHotelRating("Ridgewood", 5);
 
         SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy");
         List<Date> dates = new ArrayList<>();
