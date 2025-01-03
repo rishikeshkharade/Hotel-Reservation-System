@@ -1,9 +1,6 @@
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 class Hotel {
     String name;
@@ -22,6 +19,10 @@ class Hotel {
         this.weekendRateRewards = weekendRateRewards;
     }
 
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
     public void setWeekdayRates(int weekdayRateRegular, int weekdayRateRewards){
         this.weekdayRateRegular = weekdayRateRegular;
         this.weekdayRateRewards = weekdayRateRewards;
@@ -32,14 +33,10 @@ class Hotel {
         this.weekendRateRewards = weekendRateRewards;
     }
 
-    public void setRating(int rating){
-        this.rating = rating;
-    }
-
    public int getRate(String customerType, Date date){
         int dayOfWeek = date.getDay();
         if (dayOfWeek >= 1 && dayOfWeek <=5){
-            return customerType.equals("Regular") ? weekendRateRegular : weekdayRateRewards;
+            return customerType.equals("Regular") ? weekdayRateRegular : weekdayRateRewards;
         }else {
             return customerType.equals("Regular") ? weekendRateRegular : weekendRateRewards;
         }
@@ -77,8 +74,8 @@ class HotelReservation {
         }
     }
 
-    public String findCheapestHotel(String customerType, List<Date> dates) {
-        List<String> cheapestHotels = new ArrayList<>();
+    public String findCheapestHotelBestRatedHotel(String customerType, List<Date> dates) {
+        Hotel bestHotel = null;
         int cheapestCost = Integer.MAX_VALUE;
 
         for (Hotel hotel : hotels) {
@@ -87,22 +84,14 @@ class HotelReservation {
                 totalCost += hotel.getRate(customerType, date);
             }
 
-            if (totalCost < cheapestCost) {
+            if (totalCost < cheapestCost || (totalCost == cheapestCost && (bestHotel == null || hotel.rating > bestHotel.rating))) {
+                bestHotel = hotel;
                 cheapestCost = totalCost;
-                cheapestHotels.clear();
-                cheapestHotels.add(hotel.name);
-            }else if (totalCost == cheapestCost){
-                cheapestHotels.add(hotel.name);
             }
         }
 
-        StringBuilder result = new StringBuilder();
-        for (String hotelName : cheapestHotels) {
-            result.append(hotelName).append(" ");
+        return bestHotel != null ? bestHotel.name + ", Rating: " + bestHotel.rating + ", Total Rates: $" + cheapestCost : "No hotels found";
         }
-        result.append("with Total Rates: $").append(cheapestCost);
-        return result.toString();
-    }
 
     private int getHotelRating(String hotelName) {
         for (Hotel hotel : hotels) {
@@ -114,10 +103,10 @@ class HotelReservation {
     }
 }
 public class HotelReservationSystem {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException{
         System.out.println("Welcome to Hotel Reservation Program");
-        Scanner sc = new Scanner(System.in);
         HotelReservation reservationSystem = new HotelReservation();
+
 
         reservationSystem.setHotelRates("Lakewood", 110, 80, 90, 80);
         reservationSystem.setHotelRates("Bridgewood", 150, 100, 50, 60);
@@ -127,16 +116,16 @@ public class HotelReservationSystem {
         reservationSystem.setHotelRating("Bridgewood", 4);
         reservationSystem.setHotelRating("Ridgewood", 5);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy", Locale.ENGLISH);
         List<Date> dates = new ArrayList<>();
         try {
-                dates.add(sdf.parse("03Jan2025"));
-                dates.add(sdf.parse("04Jan2025"));
+            dates.add(sdf.parse("11Sep2020"));
+            dates.add(sdf.parse("12Sep2020"));
         }catch (ParseException e){
             e.printStackTrace();
         }
 
-        String cheapestHotels = reservationSystem.findCheapestHotel("Regular", dates);
-        System.out.println(cheapestHotels);
+        String bestRatedHotel = reservationSystem.findCheapestHotelBestRatedHotel("Regular", dates);
+        System.out.println(bestRatedHotel);
     }
 }
