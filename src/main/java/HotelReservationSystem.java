@@ -22,16 +22,17 @@ class Hotel {
         this.weekendRateRewards = weekendRateRewards;
     }
 
-    public void setWeekdayRates(int regularRate, int rewardsRate){
-        this.weekdayRateRegular = regularRate;
-        this.weekdayRateRewards = rewardsRate;
+    public void setWeekdayRates(int weekdayRateRegular, int weekdayRateRewards){
+        this.weekdayRateRegular = weekdayRateRegular;
+        this.weekdayRateRewards = weekdayRateRewards;
     }
 
-    public void setWeekendRates(int regularRate, int rewardsRate) {
-        this.weekendRateRegular = regularRate;
-        this.weekendRateRewards = rewardsRate;
+    public void setWeekendRates(int weekendRateRegular, int weekendRateRewards){
+        this.weekendRateRegular = weekendRateRegular;
+        this.weekendRateRewards = weekendRateRewards;
     }
-public int getRate(String customerType, Date date){
+
+   public int getRate(String customerType, Date date){
         int dayOfWeek = date.getDay();
         if (dayOfWeek >= 1 && dayOfWeek <=5){
             return customerType.equals("Regular") ? weekendRateRegular : weekdayRateRewards;
@@ -63,7 +64,7 @@ class HotelReservation {
         }
     }
     public String findCheapestHotel(String customerType, List<Date> dates) {
-        String cheapestHotel = null;
+        List<String> cheapestHotels = new ArrayList<>();
         int cheapestCost = Integer.MAX_VALUE;
 
         for (Hotel hotel : hotels) {
@@ -72,13 +73,21 @@ class HotelReservation {
                 totalCost += hotel.getRate(customerType, date);
             }
 
-            if (totalCost < cheapestCost || (totalCost == cheapestCost && (cheapestHotel == null || hotel.rating > getHotelRating(cheapestHotel)))){
-                cheapestHotel = hotel.name;
+            if (totalCost < cheapestCost) {
                 cheapestCost = totalCost;
+                cheapestHotels.clear();
+                cheapestHotels.add(hotel.name);
+            }else if (totalCost == cheapestCost){
+                cheapestHotels.add(hotel.name);
             }
-        }   
+        }
 
-        return cheapestHotel + ", Total Rates: $" + cheapestCost;
+        StringBuilder result = new StringBuilder();
+        for (String hotelName : cheapestHotels) {
+            result.append(hotelName).append(" ");
+        }
+        result.append("with Total Rates: $").append(cheapestCost);
+        return result.toString();
     }
 
     private int getHotelRating(String hotelName) {
@@ -100,25 +109,17 @@ public class HotelReservationSystem {
         reservationSystem.setHotelRates("Bridgewood", 150, 100, 50, 60);
         reservationSystem.setHotelRates("Ridgewood", 220, 100, 150, 40);
 
-        System.out.println("Enter the date range (e.g., 10Sep2020, 11Sep2020): ");
-        String inputDates = sc.nextLine();
-        String[] dateStrings = inputDates.split(", ");
-        List<Date> dates = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy");
 
-        try{
-            for (String dateString : dateStrings) {
-                dates.add(sdf.parse(dateString.trim()));
-            }
+        SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy");
+        List<Date> dates = new ArrayList<>();
+        try {
+                dates.add(sdf.parse("03Jan2025"));
+                dates.add(sdf.parse("04Jan2025"));
         }catch (ParseException e){
-            System.out.println("Invalid date Format. Please use ddMMMyyyy format.");
-            return;
+            e.printStackTrace();
         }
 
-        System.out.println("Enter customer type (Regular/Rewards): ");
-        String customerType = sc.nextLine().trim();
-
-        String result = reservationSystem.findCheapestHotel(customerType, dates);
-        System.out.println(result);
+        String cheapestHotels = reservationSystem.findCheapestHotel("Regular", dates);
+        System.out.println(cheapestHotels);
     }
 }
