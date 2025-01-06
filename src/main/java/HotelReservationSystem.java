@@ -2,6 +2,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+class InvalidInputException extends Exception {
+    public InvalidInputException(String message) {
+        super(message);
+    }
+}
+
 class Hotel {
     String name;
     int rating;
@@ -51,13 +57,14 @@ class HotelReservation {
         hotels.add(new Hotel("Bridgewood", 4, 160, 110, 60, 50));
         hotels.add(new Hotel("Ridgewood", 5, 220, 100, 150, 40));
     }
-    public void addHotel(String name, int rating, int weekdayRateRegular, int weekdayRateRewards, int weekendRateRegular, int weekendRateRewards){
+
+    public void addHotel(String name, int rating, int weekdayRateRegular, int weekdayRateRewards, int weekendRateRegular, int weekendRateRewards) {
         hotels.add(new Hotel(name, rating, weekdayRateRegular, weekdayRateRewards, weekendRateRegular, weekendRateRewards));
     }
 
-    public void setHotelRates(String hotelName, int weekdayRateRegular, int weekdayRateRewards, int weekendRateRegular, int weekendRateRewards){
+    public void setHotelRates(String hotelName, int weekdayRateRegular, int weekdayRateRewards, int weekendRateRegular, int weekendRateRewards) {
         for (Hotel hotel : hotels) {
-            if (hotel.name.equals(hotelName)){
+            if (hotel.name.equals(hotelName)) {
                 hotel.setWeekdayRates(weekdayRateRegular, weekdayRateRewards);
                 hotel.setWeekendRates(weekendRateRegular, weekendRateRewards);
                 break;
@@ -65,16 +72,25 @@ class HotelReservation {
         }
     }
 
-    public void setHotelRating(String hotelName, int rating){
+    public void setHotelRating(String hotelName, int rating) {
         for (Hotel hotel : hotels) {
-            if (hotel.name.equals(hotelName)){
+            if (hotel.name.equals(hotelName)) {
                 hotel.setRating(rating);
                 break;
             }
         }
     }
 
-    public String findBestRatedHotel(String customerType, List<Date> dates) {
+    public String findBestRatedHotel(String customerType, List<Date> dates) throws InvalidInputException {
+
+        if (!customerType.equals("Regular") && !customerType.equals("Rewards")) {
+            throw new InvalidInputException("Invalid customer type. Must be 'Regular' or 'Rewards'.");
+        }
+
+        if (dates == null || dates.size() < 2) {
+            throw new InvalidInputException("Invalid date range. Must have at least 2 dates.");
+        }
+
         Hotel bestHotel = null;
         int highestRating = Integer.MIN_VALUE;
         int lowestCost = Integer.MAX_VALUE;
@@ -92,8 +108,8 @@ class HotelReservation {
             }
         }
 
-        return bestHotel != null ? bestHotel.name + ", Total Rates: $" + lowestCost : "No hotels found";
-        }
+        return bestHotel != null ? String.format("%s, Rating: %d and Total Rates: $%d", bestHotel.name, bestHotel.rating, lowestCost) : "No hotels found";
+    }
 
     private int getHotelRating(String hotelName) {
         for (Hotel hotel : hotels) {
@@ -127,7 +143,11 @@ public class HotelReservationSystem {
             e.printStackTrace();
         }
 
-        String bestRatedHotel = reservationSystem.findBestRatedHotel("Regular", dates);
+        try {
+        String bestRatedHotel = reservationSystem.findBestRatedHotel("Rewards", dates);
         System.out.println(bestRatedHotel);
+    } catch (InvalidInputException e) {
+        System.out.println(e.getMessage());
+    }
     }
 }
