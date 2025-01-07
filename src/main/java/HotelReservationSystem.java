@@ -3,6 +3,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 class InvalidInputException extends Exception {
     public InvalidInputException(String message) {
@@ -47,7 +48,6 @@ class Hotel {
 
    public int getRate(String customerType, LocalDate date){
         DayOfWeek dayOfWeek = date.getDayOfWeek();
-
         if (dayOfWeek.getValue() >= 1 && dayOfWeek.getValue() <=5) {
             return customerType.equals("Regular") ? weekdayRateRegular : specialWeekdayRateRewards;
         }else {
@@ -89,24 +89,20 @@ class HotelReservation {
         }
     }
 
-    public String findBestRatedHotel(String customerType, List<LocalDate> dates) throws InvalidInputException {
-
+    public String findCheapestBestRatedHotel(String customerType, List<LocalDate> dates) throws InvalidInputException {
         if (!customerType.equals("Regular") && !customerType.equals("Rewards")) {
             throw new InvalidInputException("Invalid customer type. Must be 'Regular' or 'Rewards'.");
         }
-        String bestHotel = hotels.stream().map(hotel -> {
+        return hotels.stream()
+                .map(hotel -> {
             int totalCost = dates.stream().mapToInt(date -> hotel.getRate(customerType, date)).sum();
             return new AbstractMap.SimpleEntry<>(hotel, totalCost);
-
         })
                 .filter(entry -> entry.getValue() > 0)
                 .sorted(Comparator.comparing((AbstractMap.SimpleEntry<Hotel, Integer> entry) -> -entry.getKey().rating)
                         .thenComparingInt(AbstractMap.SimpleEntry::getValue))
-                .findFirst()
-                .map(entry -> String.format("%s, Rating: %d and Total Rates: $%d", entry.getKey().name, entry.getKey().rating, entry.getValue()))
+                .findFirst().map(entry -> String.format("%s, Rating: %d and Total Rates: $%d", entry.getKey().name, entry.getKey().rating, entry.getValue()))
                 .orElse("No hotels found");
-
-        return bestHotel;
     }
 
     private int getHotelRating(String hotelName) {
@@ -119,29 +115,44 @@ class HotelReservation {
     }
 }
 public class HotelReservationSystem {
+    private static final String REGEX_DATE = "^[0-9]{2}[A-Z][a-z]{2}[0-9]{4}$";
     public static void main(String[] args) throws ParseException{
         System.out.println("Welcome to Hotel Reservation Program");
         HotelReservation reservationSystem = new HotelReservation();
 
 
-        reservationSystem.setHotelRates("Lakewood", 110, 80, 90, 80);
-        reservationSystem.setHotelRates("Bridgewood", 150, 100, 50, 60);
-        reservationSystem.setHotelRates("Ridgewood", 220, 100, 150, 40);
+        reservationSystem.setHotelRates("Lakewood", 110, 80, 80, 80);
+        reservationSystem.setHotelRates("Bridgewood", 160, 110, 110, 50);
+        reservationSystem.setHotelRates("Ridgewood", 220, 100, 100, 40);
 
         reservationSystem.setHotelRating("Lakewood", 3);
         reservationSystem.setHotelRating("Bridgewood", 4);
         reservationSystem.setHotelRating("Ridgewood", 5);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter the date range in the format ddMMMyyyy");
+        String input = scanner.nextLine();
+        String[] dateStrings = input.split(",");
+
         List<LocalDate> dates = new ArrayList<>();
-        dates.add(LocalDate.parse("11Sep2020", formatter));
-        dates.add(LocalDate.parse("12Sep2020", formatter));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
 
         try {
-        String bestRatedHotel = reservationSystem.findBestRatedHotel("Rewards", dates);
+            for (String dateString : dateStrings) {
+                dateString = dateString.trim();
+                if (!Pattern.matches(REGEX_DATE, dateString)) {
+                    throw new InvalidInputException("Invalid date format: " + dateString);
+                }
+                dates.add(LocalDate.parse(dateString, formatter));
+            }
+            String bestRatedHotel = reservationSystem.findCheapestBestRatedHotel("Regular", dates);
         System.out.println(bestRatedHotel);
     } catch (InvalidInputException e) {
         System.out.println(e.getMessage());
-    }
+    } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            scanner.close();
+        }
     }
 }
